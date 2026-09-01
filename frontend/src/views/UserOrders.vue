@@ -6,7 +6,7 @@
         <h2 class="page-title" style="margin-bottom:4px;">订单记录</h2>
         <p class="page-sub">消费一目了然，订单轨迹清晰可见</p>
       </div>
-      <n-button size="small" secondary @click="router.push('/shop')">
+      <n-button v-if="config.config.shop_enabled" size="small" secondary @click="router.push('/shop')">
         <template #icon><n-icon><CartOutline /></n-icon></template>
         去商城
       </n-button>
@@ -105,7 +105,7 @@
           <div class="empty-actions">
             <span>{{ orders.length ? '当前状态、类型或关键词组合没有命中订单。' : '购买套餐或流量包后，会在这里记录价格、状态和退款明细。' }}</span>
             <n-button v-if="orders.length" size="small" @click="resetFilters">清除筛选</n-button>
-            <n-button v-else size="small" @click="router.push('/shop')">去商城看看</n-button>
+            <n-button v-else-if="config.config.shop_enabled" size="small" @click="router.push('/shop')">去商城看看</n-button>
           </div>
         </template>
       </n-empty>
@@ -120,10 +120,12 @@ import { NCard, NSpin, NEmpty, NButton, NRadioGroup, NRadioButton, NSelect, NInp
 import { CartOutline } from '@vicons/ionicons5'
 import * as echarts from 'echarts'
 import { apiList } from '@/api'
+import { useConfigStore } from '@/stores/config'
 import { fmtDateTime, timeAgo, yuan } from '@/utils/format'
 import { useCountUp } from '@/utils/countup'
 
 const router = useRouter()
+const config = useConfigStore()
 const orders = ref<any[]>([])
 const loading = ref(false)
 const statusFilter = ref('all')

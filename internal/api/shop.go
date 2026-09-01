@@ -34,6 +34,10 @@ func (a *API) handlePurchase(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusUnauthorized, "未登录")
 		return
 	}
+	if enabled, _ := a.st.GetSettingBool("shop_enabled"); !enabled {
+		fail(w, http.StatusForbidden, "自助购买已关闭，请联系管理员")
+		return
+	}
 	var req struct {
 		PackageID      int64  `json:"package_id"`
 		DurationDays   int64  `json:"duration_days"`

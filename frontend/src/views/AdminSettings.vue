@@ -59,6 +59,14 @@
           </n-form-item>
           <n-form-item label="积分汇率（积分=1元）"><n-input-number v-model:value="pointsRate" :min="1" style="width:200px;" /></n-form-item>
           <n-form-item label="注册赠送积分"><n-input-number v-model:value="signupBonus" :min="0" style="width:200px;" /></n-form-item>
+          <n-form-item label="积分商城（自助购买）">
+            <div>
+              <n-switch v-model:value="shopEnabled" />
+              <div style="font-size:12px;color:var(--text-3);line-height:1.7;margin-top:4px;max-width:520px;">
+                关闭后用户侧隐藏积分商城、订单记录、积分明细入口，购买接口一并禁用；套餐与积分改为管理员在「用户管理」中分配或充值。
+              </div>
+            </div>
+          </n-form-item>
           <n-form-item label="新用户默认流量 (GB)"><n-input-number v-model:value="defaultTraffic" :min="0" style="width:200px;" /></n-form-item>
           <n-form-item label="新用户默认天数"><n-input-number v-model:value="defaultExpiry" :min="0" style="width:200px;" /></n-form-item>
           <n-form-item label="免费节点分组">
@@ -803,6 +811,8 @@ const freeGroupId = ref<number | null>(null)
 const credsResetEnabled = ref(false)
 // 默认 true，与后端「缺省即开启，只有显式 '0' 才关」保持一致。
 const blockPrivate = ref(true)
+// 默认 false，与后端「缺省即关闭」一致：关闭时用户侧隐藏商城，由管理员分配。
+const shopEnabled = ref(false)
 const alertCpu = ref(90)
 const alertMem = ref(90)
 const alertDisk = ref(85)
@@ -893,6 +903,7 @@ type SettingsDraft = {
     freeGroupId: number | null
     credsResetEnabled: boolean
     blockPrivate: boolean
+    shopEnabled: boolean
     alertCpu: number
     alertMem: number
     alertDisk: number
@@ -931,6 +942,7 @@ function captureDraft(): SettingsDraft {
       freeGroupId: freeGroupId.value,
       credsResetEnabled: credsResetEnabled.value,
       blockPrivate: blockPrivate.value,
+      shopEnabled: shopEnabled.value,
       alertCpu: alertCpu.value,
       alertMem: alertMem.value,
       alertDisk: alertDisk.value,
@@ -987,6 +999,7 @@ function discardChanges() {
   freeGroupId.value = draft.values.freeGroupId
   credsResetEnabled.value = draft.values.credsResetEnabled
   blockPrivate.value = draft.values.blockPrivate
+  shopEnabled.value = draft.values.shopEnabled
   alertCpu.value = draft.values.alertCpu
   alertMem.value = draft.values.alertMem
   alertDisk.value = draft.values.alertDisk
@@ -1068,6 +1081,7 @@ async function handleSave() {
       free_group_id: freeGroupId.value ? String(freeGroupId.value) : '',
       node_creds_reset_enabled: credsResetEnabled.value ? 'true' : 'false',
       sb_block_private: blockPrivate.value ? '1' : '0',
+      shop_enabled: shopEnabled.value ? 'true' : 'false',
       alert_cpu_threshold: String(alertCpu.value),
       alert_mem_threshold: String(alertMem.value),
       alert_disk_threshold: String(alertDisk.value),
@@ -1240,6 +1254,7 @@ async function loadSettings() {
       freeGroupId.value = parseInt(data.free_group_id) || null
       credsResetEnabled.value = data.node_creds_reset_enabled === 'true'
       blockPrivate.value = data.sb_block_private !== '0'
+      shopEnabled.value = data.shop_enabled === 'true'
       alertCpu.value = parseInt(data.alert_cpu_threshold) || 90
       alertMem.value = parseInt(data.alert_mem_threshold) || 90
       alertDisk.value = parseInt(data.alert_disk_threshold) || 85

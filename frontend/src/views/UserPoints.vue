@@ -84,7 +84,7 @@
           <div class="empty-actions">
             <span>{{ txs.length ? '当前筛选组合未命中记录，可清除条件查看全部明细。' : '充值、赠送、购买与退款都会在这里保留余额快照。' }}</span>
             <n-button v-if="txs.length" size="small" @click="resetFilters">清除筛选</n-button>
-            <n-button v-else size="small" @click="router.push('/shop')">查看积分商城</n-button>
+            <n-button v-else-if="config.config.shop_enabled" size="small" @click="router.push('/shop')">查看积分商城</n-button>
           </div>
         </template>
       </n-empty>
@@ -98,11 +98,13 @@ import { useRouter } from 'vue-router'
 import { NCard, NSpin, NEmpty, NButton, NRadioGroup, NRadioButton, NSelect, NInput } from 'naive-ui'
 import * as echarts from 'echarts'
 import { useAuthStore } from '@/stores/auth'
+import { useConfigStore } from '@/stores/config'
 import { apiGet } from '@/api'
 import { fmtDateTime, yuan } from '@/utils/format'
 import { useCountUp } from '@/utils/countup'
 
 const auth = useAuthStore()
+const config = useConfigStore()
 const router = useRouter()
 const txs = ref<any[]>([])
 const loading = ref(false)

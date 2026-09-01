@@ -11,8 +11,8 @@
           <template #icon><n-icon><SpeedometerOutline /></n-icon></template>
           控制台
         </n-button>
-        <n-button size="small" secondary @click="router.push('/orders')">订单记录</n-button>
-        <n-button size="small" type="primary" @click="router.push('/shop')">去商城</n-button>
+        <n-button v-if="config.config.shop_enabled" size="small" secondary @click="router.push('/orders')">订单记录</n-button>
+        <n-button v-if="config.config.shop_enabled" size="small" type="primary" @click="router.push('/shop')">去商城</n-button>
       </n-space>
     </div>
 
@@ -348,6 +348,7 @@ import { NCard, NInput, NInputGroup, NButton, NDataTable, NTag, NTooltip, NSelec
 import { SpeedometerOutline } from '@vicons/ionicons5'
 import { apiGet, apiList, apiPost, apiPut } from '@/api'
 import { useAuthStore } from '@/stores/auth'
+import { useConfigStore } from '@/stores/config'
 import { fmtBytes, fmtTotal, fmtDate, pct } from '@/utils/format'
 import { planStatusMeta, planTimeText, planSortKey } from '@/utils/plan'
 import { copyText } from '@/utils/clipboard'
@@ -357,6 +358,7 @@ const router = useRouter()
 const message = useMessage()
 const dialog = useDialog()
 const auth = useAuthStore()
+const config = useConfigStore()
 const sub = ref<any>({})
 const proxies = ref<any[]>([])
 const nodes = ref<any[]>([])

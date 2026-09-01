@@ -85,6 +85,7 @@ func (a *API) registerMode() string {
 func (a *API) handleConfig(w http.ResponseWriter, r *http.Request) {
 	verify, _ := a.st.GetSettingBool("email_verify_required")
 	rate, _ := a.st.GetSettingInt64("points_per_cny", 10)
+	shopEnabled, _ := a.st.GetSettingBool("shop_enabled")
 	mode := a.registerMode()
 	siteName, _ := a.st.GetSetting("site_name")
 	if siteName == "" {
@@ -104,6 +105,7 @@ func (a *API) handleConfig(w http.ResponseWriter, r *http.Request) {
 	ok(w, J{
 		"register_mode":         mode,
 		"registration_open":     mode != "closed",
+		"shop_enabled":          shopEnabled,
 		"email_verify_required": verify,
 		// Whether this panel can send mail at all. The login dialog needs it to
 		// decide whether 找回密码 is a real offer or a dead end — with no SMTP

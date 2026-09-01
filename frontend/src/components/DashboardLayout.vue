@@ -166,10 +166,13 @@ const menuOptions = computed<MenuOption[]>(() => {
   const items: MenuOption[] = [
     { label: '首页', key: '/', icon: renderIcon(HomeOutline) },
     { type: 'group', key: 'g-common', label: groupLabel('常用'), children: userMenuItems },
-    { type: 'group', key: 'g-shop', label: groupLabel('商城'), children: shopItems },
-    { type: 'group', key: 'g-info', label: groupLabel('信息'), children: infoItems },
-    { label: '账户设置', key: '/account', icon: renderIcon(PersonOutline) },
   ]
+  // 积分商城/订单/积分入口由后台开关控制，关闭时不显示菜单。
+  if (config.config.shop_enabled) {
+    items.push({ type: 'group', key: 'g-shop', label: groupLabel('商城'), children: shopItems })
+  }
+  items.push({ type: 'group', key: 'g-info', label: groupLabel('信息'), children: infoItems })
+  items.push({ label: '账户设置', key: '/account', icon: renderIcon(PersonOutline) })
   if (auth.isAdmin) {
     items.push({
       label: '管理后台', key: 'admin-root', icon: renderIcon(SettingsOutline),
@@ -197,10 +200,12 @@ const searchItems = computed(() => {
   const items = [
     { label: '首页', value: '/' },
     ...userMenuItems.map(item => ({ label: String(item.label), value: String(item.key) })),
-    ...shopItems.map(item => ({ label: String(item.label), value: String(item.key) })),
-    ...infoItems.map(item => ({ label: String(item.label), value: String(item.key) })),
-    { label: '账户设置', value: '/account' },
   ]
+  if (config.config.shop_enabled) {
+    items.push(...shopItems.map(item => ({ label: String(item.label), value: String(item.key) })))
+  }
+  items.push(...infoItems.map(item => ({ label: String(item.label), value: String(item.key) })))
+  items.push({ label: '账户设置', value: '/account' })
   if (auth.isAdmin) {
     items.push(
       ...adminOpsItems.map(item => ({ label: String(item.label), value: String(item.key) })),

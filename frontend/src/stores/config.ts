@@ -7,6 +7,7 @@ export interface SiteConfig {
   site_description: string
   register_mode: string
   registration_open: boolean
+  shop_enabled: boolean
   email_verify_required: boolean
   // 面板到底能不能发信。发不了的话，「找回密码」是条死路——链接只会写进
   // 服务端日志，用户永远等不到那封邮件。
@@ -25,6 +26,7 @@ export const useConfigStore = defineStore('config', () => {
     site_description: '',
     register_mode: 'open',
     registration_open: true,
+    shop_enabled: true,
     email_verify_required: true,
     // 默认 true：拿不到 /api/config 时维持原样（显示找回密码入口），
     // 而不是因为一次网络抖动就把功能藏起来。

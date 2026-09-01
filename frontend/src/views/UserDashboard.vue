@@ -15,7 +15,7 @@
           <template #icon><n-icon><LinkOutline /></n-icon></template>
           订阅管理
         </n-button>
-        <n-button size="small" type="primary" @click="router.push('/shop')">
+        <n-button v-if="config.config.shop_enabled" size="small" type="primary" @click="router.push('/shop')">
           <template #icon><n-icon><CartOutline /></n-icon></template>
           去商城
         </n-button>
@@ -31,9 +31,9 @@
     </transition-group>
 
     <div v-if="!activeCount" class="onboarding-strip">
-      <div class="onboarding-copy"><b>从这里开始</b><span>当前没有生效中的套餐，完成下面两步即可使用服务。</span></div>
-      <button type="button" @click="router.push('/shop')"><i>1</i><span><b>选择套餐</b><small>对比流量、时长与价格</small></span></button>
-      <button type="button" @click="router.push('/sub')"><i>2</i><span><b>导入订阅</b><small>复制地址或一键打开客户端</small></span></button>
+      <div class="onboarding-copy"><b>从这里开始</b><span>{{ config.config.shop_enabled ? '当前没有生效中的套餐，完成下面两步即可使用服务。' : '当前没有生效中的套餐，联系管理员开通后即可使用服务。' }}</span></div>
+      <button v-if="config.config.shop_enabled" type="button" @click="router.push('/shop')"><i>1</i><span><b>选择套餐</b><small>对比流量、时长与价格</small></span></button>
+      <button type="button" @click="router.push('/sub')"><i>{{ config.config.shop_enabled ? 2 : 1 }}</i><span><b>导入订阅</b><small>复制地址或一键打开客户端</small></span></button>
       <button type="button" @click="showHelp"><i>?</i><span><b>查看帮助</b><small>安装、连接与常见问题</small></span></button>
     </div>
 
@@ -55,8 +55,9 @@
       />
 
       <StatCard
-        label="积分" :value="String(dPoints)" :sub="yuan(dash.points || 0) + ' · 去商城兑换'"
-        clickable :delay="120" @click="router.push('/shop')"
+        label="积分" :value="String(dPoints)"
+        :sub="config.config.shop_enabled ? yuan(dash.points || 0) + ' · 去商城兑换' : yuan(dash.points || 0)"
+        :clickable="config.config.shop_enabled" :delay="120" @click="config.config.shop_enabled && router.push('/shop')"
       />
 
       <StatCard
@@ -111,7 +112,7 @@
             <template #icon><n-icon><LinkOutline /></n-icon></template>
             管理订阅
           </n-button>
-          <n-button block secondary @click="router.push('/orders')">
+          <n-button v-if="config.config.shop_enabled" block secondary @click="router.push('/orders')">
             <template #icon><n-icon><ReceiptOutline /></n-icon></template>
             订单记录
           </n-button>
@@ -216,7 +217,7 @@ const ringOffset = computed(() => {
 const ringFoot = computed(() => {
   if (!dash.value.traffic) return '—'
   if (metered.value) return `${fmtBytes(traffic.value.used)} / ${fmtBytes(traffic.value.total)}`
-  return '去商城选购套餐'
+  return config.config.shop_enabled ? '去商城选购套餐' : '暂无可用套餐'
 })
 
 // ---- 套餐（只报汇总，不在控制台铺明细：多份并存时任何单份都代表不了账号）----
@@ -231,7 +232,7 @@ const nextExpiry = computed<number | null>(() => {
 })
 const nextExpiryDays = computed(() => daysLeft(nextExpiry.value))
 const planSub = computed(() => {
-  if (!plans.value.length) return '还没有套餐，去商城看看'
+  if (!plans.value.length) return config.config.shop_enabled ? '还没有套餐，去商城看看' : '还没有套餐'
   if (!activeCount.value) return '全部已到期或用尽'
   if (nextExpiry.value === null) return activeCount.value > 1 ? '均不过期' : '不过期'
   const prefix = activeCount.value > 1 ? '最近 ' : ''
@@ -250,20 +251,19 @@ const alerts = computed(() => {
     return out
   }
   if (plans.value.length && !activeCount.value) {
-    out.push({
-      key: 'no-active', type: 'warning', text: '套餐已全部到期或用尽，',
-      to: '/shop', action: '去续费',
-    })
+    out.push(config.config.shop_enabled
+      ? { key: 'no-active', type: 'warning', text: '套餐已全部到期或用尽，', to: '/shop', action: '去续费' }
+      : { key: 'no-active', type: 'warning', text: '套餐已全部到期或用尽，请联系管理员开通。' })
   } else if (nextExpiryDays.value !== null && nextExpiryDays.value <= 7) {
     const many = activeCount.value > 1
-    out.push({
-      key: 'expiring', type: 'warning',
-      text: `${many ? '最近一份套餐' : '套餐'}将在 ${Math.max(nextExpiryDays.value, 0)} 天后到期，`,
-      to: '/shop', action: '去续费',
-    })
+    out.push(config.config.shop_enabled
+      ? { key: 'expiring', type: 'warning', text: `${many ? '最近一份套餐' : '套餐'}将在 ${Math.max(nextExpiryDays.value, 0)} 天后到期，`, to: '/shop', action: '去续费' }
+      : { key: 'expiring', type: 'warning', text: `${many ? '最近一份套餐' : '套餐'}将在 ${Math.max(nextExpiryDays.value, 0)} 天后到期，请联系管理员续费。` })
   }
   if (metered.value && (traffic.value.used || 0) >= traffic.value.total) {
-    out.push({ key: 'exhausted', type: 'warning', text: '流量已用尽，', to: '/shop', action: '购买流量包' })
+    out.push(config.config.shop_enabled
+      ? { key: 'exhausted', type: 'warning', text: '流量已用尽，', to: '/shop', action: '购买流量包' }
+      : { key: 'exhausted', type: 'warning', text: '流量已用尽，请联系管理员处理。' })
   }
   return out
 })

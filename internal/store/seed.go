@@ -27,6 +27,8 @@ func (s *Store) Seed(cfg *config.Config) (SeedInfo, error) {
 
 	defaults := map[string]string{
 		"registration_open":     "false",
+		// 积分商城/自助购买开关：关闭时前端隐藏商城与订单入口，购买接口一并拒绝。
+		"shop_enabled":          "false",
 		"email_verify_required": "true",
 		"default_traffic":       "10737418240", // 10 GiB
 		"default_expiry_days":   "30",

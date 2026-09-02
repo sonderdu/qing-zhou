@@ -46,7 +46,8 @@ RUN apk add --no-cache ca-certificates tzdata \
  && mkdir -p /data \
  && chown qingzhou:qingzhou /data
 COPY --from=builder /out/qingzhou-${TARGETARCH} /usr/local/bin/qingzhou
-COPY --from=builder /out/probe /opt/qingzhou/probe
+# 探针目录需对运行用户(qingzhou/10001)可写：启动时会向该目录写 probe-linux-*.new 以对齐当前 release
+COPY --chown=10001:10001 --from=builder /out/probe /opt/qingzhou/probe
 # 断言 ELF e_machine 与镜像架构一致，避免再把 amd64 二进制拷进 arm64 镜像（#27）
 RUN got=$(dd if=/usr/local/bin/qingzhou bs=1 skip=18 count=2 2>/dev/null | od -An -t x1 | tr -d ' \n'); \
     case "$TARGETARCH" in \

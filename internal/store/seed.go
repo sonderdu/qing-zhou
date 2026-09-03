@@ -29,6 +29,9 @@ func (s *Store) Seed(cfg *config.Config) (SeedInfo, error) {
 		"registration_open":     "false",
 		// 积分商城/自助购买开关：关闭时前端隐藏商城与订单入口，购买接口一并拒绝。
 		"shop_enabled":          "false",
+		// 本机节点（面板机自身作为 sing-box 节点）开关；控制面-only 部署可关闭
+		// 以跳过每轮同步对本机节点（server_id=0）的配置下发。
+		"sb_local_enabled":      "true",
 		"email_verify_required": "true",
 		"default_traffic":       "10737418240", // 10 GiB
 		"default_expiry_days":   "30",

@@ -58,7 +58,8 @@ RUN got=$(dd if=/usr/local/bin/qingzhou bs=1 skip=18 count=2 2>/dev/null | od -A
     [ "$got" = "$want" ] || { echo "qingzhou ELF e_machine=$got want=$want ($TARGETARCH)"; exit 1; }
 ENV QZ_LISTEN=0.0.0.0:8081 \
     QZ_DB=/data/qingzhou.db \
-    QZ_PROBE_DIR=/opt/qingzhou/probe
+    QZ_PROBE_DIR=/opt/qingzhou/probe \
+    QZ_SB_LOCAL_ENABLED=false
 EXPOSE 8081
 VOLUME ["/data"]
 USER qingzhou

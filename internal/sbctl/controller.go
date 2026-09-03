@@ -72,6 +72,11 @@ type Controller struct {
 	v2rayListen string
 	remoteMgr   *sshctl.RemoteManager // SSH manager for remote servers; nil if not configured
 
+	// localDisabled skips rebuilding and applying the panel's own local node
+	// (server_id=0). Written once during startup wiring (SetLocalDisabled),
+	// before Run starts, so it needs no lock.
+	localDisabled bool
+
 	// restartObserver is told about every sing-box restart caused by the PERIODIC
 	// sync pass — the ones nobody asked for. Restarts from an admin edit are
 	// deliberate and are not reported, so a watcher downstream can treat what it
@@ -172,6 +177,13 @@ func New(st ConfigStore, mgr Applier, stats StatsFetcher, baseConfig, v2rayListe
 		restartCircuit: newRestartCircuit(),
 		intervalWake:   make(chan struct{}, 1),
 	}
+}
+
+// SetLocalDisabled stops the controller from building and applying the panel's
+// own local node (server_id=0). Set once at startup for control-plane-only
+// deployments (e.g. the container image) where no local sing-box is installed.
+func (c *Controller) SetLocalDisabled(disabled bool) {
+	c.localDisabled = disabled
 }
 
 // NotifyIntervalsChanged asks Run to reload its interval provider and reset the
@@ -596,38 +608,40 @@ func (c *Controller) rebuild(periodic, forceHealth bool) error {
 	// and shares this file is a second writer, and the two only coexist while
 	// they generate the same bytes.
 	var panelCfg []byte
-	if cfg, err := c.st.BuildSingboxConfig(c.baseConfig, c.v2rayListen, byTag); err != nil {
-		lastErr = fmt.Errorf("local build config: %w", err)
-		log.Printf("sbctl: local rebuild error: %v", err)
-		record(0, lastErr)
-	} else {
-		panelCfg = cfg
-		if err := c.periodicCircuitError(periodic, store.LocalNodeID); err != nil {
-			lastErr = err
-			record(store.LocalNodeID, err)
-		} else if !c.desiredNeedsApply(store.LocalNodeID, cfg, forceHealth) {
-			// Cached desired bytes are not a fresh health result. Preserve the
-			// previous verified status, especially a failed full reconciliation.
+	if !c.localDisabled {
+		if cfg, err := c.st.BuildSingboxConfig(c.baseConfig, c.v2rayListen, byTag); err != nil {
+			lastErr = fmt.Errorf("local build config: %w", err)
+			log.Printf("sbctl: local rebuild error: %v", err)
+			record(0, lastErr)
 		} else {
-			restarted, applyErr := c.applyPanel(cfg)
-			opened := false
-			if restarted {
-				opened, _ = c.notifyRestart(periodic, store.LocalNodeID, store.LocalNodeName)
-			}
-			if applyErr != nil {
-				lastErr = fmt.Errorf("local apply: %w", applyErr)
-				if opened {
-					lastErr = errors.Join(lastErr, circuitOpenError(c.currentRestartPolicy()))
-				}
-				log.Printf("sbctl: local apply error: %v", lastErr)
-				record(store.LocalNodeID, lastErr)
+			panelCfg = cfg
+			if err := c.periodicCircuitError(periodic, store.LocalNodeID); err != nil {
+				lastErr = err
+				record(store.LocalNodeID, err)
+			} else if !c.desiredNeedsApply(store.LocalNodeID, cfg, forceHealth) {
+				// Cached desired bytes are not a fresh health result. Preserve the
+				// previous verified status, especially a failed full reconciliation.
 			} else {
-				c.rememberDesired(store.LocalNodeID, cfg)
-				if opened {
-					lastErr = circuitOpenError(c.currentRestartPolicy())
+				restarted, applyErr := c.applyPanel(cfg)
+				opened := false
+				if restarted {
+					opened, _ = c.notifyRestart(periodic, store.LocalNodeID, store.LocalNodeName)
+				}
+				if applyErr != nil {
+					lastErr = fmt.Errorf("local apply: %w", applyErr)
+					if opened {
+						lastErr = errors.Join(lastErr, circuitOpenError(c.currentRestartPolicy()))
+					}
+					log.Printf("sbctl: local apply error: %v", lastErr)
 					record(store.LocalNodeID, lastErr)
 				} else {
-					record(store.LocalNodeID, nil)
+					c.rememberDesired(store.LocalNodeID, cfg)
+					if opened {
+						lastErr = circuitOpenError(c.currentRestartPolicy())
+						record(store.LocalNodeID, lastErr)
+					} else {
+						record(store.LocalNodeID, nil)
+					}
 				}
 			}
 		}

@@ -3,6 +3,7 @@
 ## Docker（最省事）
 
 面板是中心机、SSH 管远程落地，容器不需要跑 sing-box，只需持久化 DB。镜像内置两架构探针，支持 amd64/arm64。
+镜像默认 `QZ_SB_LOCAL_ENABLED=false`（控制面-only）：本机节点（server_id=0）不在容器内跑，需在宿主机用 systemd 单独部署。
 
 ```bash
 # 改 docker-compose.yml 里的 QZ_PUBLIC_BASE 与 QZ_SECRET_KEY(openssl rand -hex 32)
@@ -31,6 +32,8 @@ curl -fsSL https://<你的面板域名>/install-singbox.sh | bash
 `QZ_PUBLIC_BASE` 环境变量 > 设置页「访问地址」> 反代头/请求 Host。
 
 本机落地用脚本输出的默认值即可（`QZ_SINGBOX_*`）；远程落地在面板「服务器」新增并填写。
+本机节点是否纳入面板管理由开关 `sb_local_enabled`（环境变量 `QZ_SB_LOCAL_ENABLED`）控制：默认开启（裸机装了
+sing-box 即生效）；控制面-only 部署（如 Docker 容器，镜像已默认设为 false）关闭后不再下发本机配置。
 
 ## 探针监控（可选，每台服务器）
 探针 `qingzhou-probe` 上报 CPU/内存/磁盘/负载，安装命令在面板「监控管理」页获取。

@@ -207,6 +207,11 @@ func buildSbController(st *store.Store, app *api.API, sshKeyDir string) *sbctl.C
 	remoteMgr.SetHostKeyPersister(func(id int64, key string) error { return st.SetServerHostKey(id, key) })
 
 	ctrl := sbctl.New(st, mgr, stats, base, v2rayListen)
+	// 本机节点（面板机自身作为 sing-box 节点）可关闭：控制面-only 部署（如容器
+	// 镜像，未安装 sing-box）关闭后，每轮同步不再记一次本机下发失败。
+	if v := get("QZ_SB_LOCAL_ENABLED", "sb_local_enabled", "true"); v == "false" || v == "0" {
+		ctrl.SetLocalDisabled(true)
+	}
 	ctrl.SetRemoteManager(remoteMgr)
 	app.SetSbController(ctrl)
 	// Restarts caused by the periodic pass — the ones nobody asked for — feed the

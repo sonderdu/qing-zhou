@@ -31,7 +31,7 @@ func Load() *Config {
 		// widen the reach of an install that is already running.
 		ListenAddr:    env("QZ_LISTEN", "0.0.0.0:8081"),
 		DBPath:        env("QZ_DB", "qingzhou.db"),
-		AdminUsername: env("QZ_ADMIN_USER", "mllt992"),
+		AdminUsername: env("QZ_ADMIN_USER", "sonderdu"),
 		// Empty means: generate a random password on first-run seed and log it.
 		AdminPassword: os.Getenv("QZ_ADMIN_PASS"),
 		SSHKeyDir:     env("QZ_SSH_KEY_DIR", defaultSSHKeyDir(env("QZ_DB", "qingzhou.db"))),

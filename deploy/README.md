@@ -56,7 +56,7 @@ sing-box 即生效）；控制面-only 部署（如 Docker 容器，镜像已默
 `qingzhou.env`（密钥自动生成、可选托管探针二进制）、装好 systemd 并启动；已安装时则升级
 （配置不动、二进制原子替换，并顺带刷新 `QZ_PROBE_DIR` 里的探针；面板「在线更新」以及新版本启动时同样会把该目录对齐到当前 release，避免一键安装仍下发旧探针）：
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/mllt992/qing-zhou/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/sonderdu/qing-zhou/main/install.sh)
 # 选项：--version vX.Y.Z | --force | --proxy https://mirror.ghproxy.com/
 ```
 
@@ -94,7 +94,7 @@ systemctl daemon-reload && systemctl enable --now qingzhou
 会在你于 GitHub 上发布 release 时自动构建并上传（版本号自动注入 = release tag）。
 
 > 仅 Linux 部署支持自更新；其他平台请手动替换。可选环境变量：
-> `QZ_UPDATE_REPO`（默认 `mllt992/qing-zhou`）、`QZ_UPDATE_GITHUB_TOKEN`（提升 GitHub API 速率上限）。
+> `QZ_UPDATE_REPO`（默认 `sonderdu/qing-zhou`）、`QZ_UPDATE_GITHUB_TOKEN`（提升 GitHub API 速率上限）。
 
 ### 手动更新
 ```bash

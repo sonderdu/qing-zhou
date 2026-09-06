@@ -139,7 +139,7 @@
 自动识别架构（amd64/arm64）、下载 GitHub 最新 release、SHA-256 校验、交互式引导配置（监听地址 / 访问地址 / 管理员账号，密钥自动生成）、装好 systemd 并启动；**已安装则原地升级**（配置与数据库不动，二进制原子替换）：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/mllt992/qing-zhou/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/sonderdu/qing-zhou/main/install.sh)
 ```
 
 常用选项：`--version vX.Y.Z` 装指定版本；`--force` 同版本强制重装；`--proxy https://mirror.ghproxy.com/` 国内下载加速。装完后升级可重跑脚本，或直接用面板内「在线更新」。
@@ -156,28 +156,28 @@ sed -i 's|^QZ_LISTEN=.*|QZ_LISTEN=0.0.0.0:8081|' /opt/qingzhou/qingzhou.env && s
 bash /opt/qingzhou/install.sh uninstall
 ```
 
-先停服务、删 systemd 与二进制，再单独确认是否连数据库和配置一起删（输 `yes` 才删 `/opt/qingzhou`）。老版本装的没有这份副本，直接 `bash <(curl -fsSL https://raw.githubusercontent.com/mllt992/qing-zhou/main/install.sh) uninstall`。
+先停服务、删 systemd 与二进制，再单独确认是否连数据库和配置一起删（输 `yes` 才删 `/opt/qingzhou`）。老版本装的没有这份副本，直接 `bash <(curl -fsSL https://raw.githubusercontent.com/sonderdu/qing-zhou/main/install.sh) uninstall`。
 
 ### 一、Docker 一键部署（最省事）
 
 面板是中心机、SSH 管远程落地，容器不需要跑 sing-box；镜像内置两架构探针，支持 amd64/arm64。
 
 ```bash
-git clone https://github.com/mllt992/qing-zhou.git && cd qing-zhou
+git clone https://github.com/sonderdu/qing-zhou.git && cd qing-zhou
 # 改 docker-compose.yml 里的 QZ_PUBLIC_BASE 与 QZ_SECRET_KEY(openssl rand -hex 32)
 docker compose up -d
 docker compose logs -f qingzhou     # 首启打印随机管理员密码（未设 QZ_ADMIN_PASS 时）
 ```
 
-或直接用镜像：`docker run -d -p 8081:8081 -e QZ_SECRET_KEY=$(openssl rand -hex 32) -v qingzhou-data:/data ghcr.io/mllt992/qing-zhou:latest`。**Docker 用「拉新镜像 + 重建容器」升级**，详见 [Wiki · Docker 部署](https://github.com/mllt992/qing-zhou/wiki/Docker-部署)。
+或直接用镜像：`docker run -d -p 8081:8081 -e QZ_SECRET_KEY=$(openssl rand -hex 32) -v qingzhou-data:/data ghcr.io/sonderdu/qing-zhou:latest`。**Docker 用「拉新镜像 + 重建容器」升级**，详见 [Wiki · Docker 部署](https://github.com/sonderdu/qing-zhou/wiki/Docker-部署)。
 
 通过当前发布工作流新构建的 GHCR 镜像会携带构建来源证明（provenance）与 SBOM，并标记
 对应的源码 revision。可用 Buildx 查看镜像清单和证明；把示例版本换成实际安装的 tag：
 
 ```bash
-docker buildx imagetools inspect ghcr.io/mllt992/qing-zhou:vX.Y.Z
-docker buildx imagetools inspect ghcr.io/mllt992/qing-zhou:vX.Y.Z --format '{{json .Provenance}}'
-docker buildx imagetools inspect ghcr.io/mllt992/qing-zhou:vX.Y.Z --format '{{json .SBOM}}'
+docker buildx imagetools inspect ghcr.io/sonderdu/qing-zhou:vX.Y.Z
+docker buildx imagetools inspect ghcr.io/sonderdu/qing-zhou:vX.Y.Z --format '{{json .Provenance}}'
+docker buildx imagetools inspect ghcr.io/sonderdu/qing-zhou:vX.Y.Z --format '{{json .SBOM}}'
 ```
 
 ### 二、本地开发运行
@@ -202,7 +202,7 @@ Windows PowerShell 可直接用 `./start.ps1`（已设好上述环境变量）�
 
 浏览器访问 <http://127.0.0.1:8081>。**首次启动**会自动初始化数据库并创建管理员账号：
 
-- 用户名默认 `mllt992`（可用 `QZ_ADMIN_USER` 指定）
+- 用户名默认 `sonderdu`（可用 `QZ_ADMIN_USER` 指定）
 - 未设 `QZ_ADMIN_PASS` 时，会**随机生成密码并打印到启动日志**（请到终端查看并首登后立即改密）
 
 ### 三、编译生产二进制（单文件，内嵌前端）
@@ -285,10 +285,10 @@ systemctl daemon-reload && systemctl enable --now qingzhou
 | `QZ_TRUSTED_PROXIES` | 空（仅信回环） | 受信任反代的 IP / CIDR，逗号分隔。**反代不在本机时必须设**，否则转发头被忽略，限流与链接生成会拿到反代的 IP |
 | `QZ_PROBE_DIR` | `cmd/probe/dist` | 探针二进制目录，面板据此提供下载与「一键安装」。二进制部署须设为绝对目录（放入 `probe-linux-amd64/arm64`），否则探针安装 404。`install.sh`、面板「在线更新」、以及新版本启动时都会把该目录对齐到当前 release，避免只升面板、一键安装仍下发旧探针 |
 | `QZ_WEB_DIR` | 空 | 设为 `frontend/dist` 从磁盘读前端；生产留空用内嵌资源 |
-| `QZ_ADMIN_USER` | `mllt992` | 初始管理员用户名（仅首次 seed 生效）。**一键脚本安装时会问，默认写入 `admin`** |
+| `QZ_ADMIN_USER` | `sonderdu` | 初始管理员用户名（仅首次 seed 生效）。**一键脚本安装时会问，默认写入 `admin`** |
 | `QZ_ADMIN_PASS` | 随机生成 | 初始管理员密码；留空则随机生成并打印到日志 |
 | `QZ_SECRET_KEY` | 回退 jwt_secret | **加密库内敏感配置的主密钥**，建议 `openssl rand -hex 32`，置环境变量不入库。**一旦使用勿再更换**，否则已加密内容无法解密 |
-| `QZ_UPDATE_REPO` | `mllt992/qing-zhou` | 「在线更新」检查的 GitHub 仓库；fork 后想发自己的版本就改成你的仓库 |
+| `QZ_UPDATE_REPO` | `sonderdu/qing-zhou` | 「在线更新」检查的 GitHub 仓库；fork 后想发自己的版本就改成你的仓库 |
 | `QZ_UPDATE_GITHUB_TOKEN` | 空 | 仅用于提升 GitHub API 匿名速率上限（60/时），公开仓库无需任何权限 |
 | `QZ_SINGBOX_BIN` | 自动探测 | sing-box 可执行路径。顺序：本变量 → 常见安装路径 → `PATH` |
 | `QZ_SINGBOX_CONFIG` | `/etc/sing-box/config.json` | 面板下发的配置路径 |
